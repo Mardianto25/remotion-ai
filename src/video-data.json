@@ -1,17 +1,17 @@
 [
   {
+    "title": "Kekuatan Diri",
+    "text": "Lelahmu hari ini adalah akar dari ketangguhanmu di masa depan. Tetaplah melangkah.",
+    "image": "https://pixabay.com/get/g1b3e3b94487f061d980aa0b62f6e1c87681a14a29e7f607d32f70a72256f06698c906665c682dd9d869359fef4aaee265cdd3c7b8c0c3a5e7788b18f384d83cc_1280.jpg"
+  },
+  {
     "title": "Hening Sejenak",
-    "text": "Kadang, berhenti sejenak bukan berarti kalah, melainkan cara jiwa mengumpulkan kembali kekuatannya.",
-    "keyword": "forest"
+    "text": "Terkadang, kamu hanya perlu berhenti sejenak untuk kembali mendengar suara hatimu.",
+    "image": "https://pixabay.com/get/g5c16c4def183e5244e4e30e9cc71f519d059404783a670caab5a4bb4de688e96887cd2ebd204d2140d3d6c320736224aafefc8c22b561bdf01dbd537ce80bf1b_1280.jpg"
   },
   {
-    "title": "Hargai Proses",
-    "text": "Bunga tidak mekar dalam semalam, begitu pula dengan setiap impian besarmu.",
-    "keyword": "sunrise"
-  },
-  {
-    "title": "Terus Melangkah",
-    "text": "Percayalah pada jalanmu, badai terhebat pun pasti akan berlalu menyisakan ketenangan.",
-    "keyword": "ocean"
+    "title": "Harapan Baru",
+    "text": "Kegelapan malam akan selalu kalah oleh fajar yang membawa awal baru.",
+    "image": "https://pixabay.com/get/g073831921b62c7e5b7a3048293cc4980b7f053b07ac3e38f402aa84c8eaa8d767f372ef5b1fd1dac2305dd18ccb61840cced209dc4d04c6115df7627f7c46405_1280.jpg"
   }
 ]
