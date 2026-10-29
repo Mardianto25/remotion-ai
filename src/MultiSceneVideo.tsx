@@ -14,7 +14,7 @@ export const MultiSceneVideo = () => {
   const fps = 30;
 
   return (
-    <AbsoluteFill style={{ backgroundColor: "#090d16" }}>
+    <AbsoluteFill style={{ backgroundColor: "#090d16", overflow: "hidden" }}>
       {defaultAudio ? (
         <Audio src={defaultAudio} volume={0.8} />
       ) : null}
@@ -22,12 +22,11 @@ export const MultiSceneVideo = () => {
       {subtitles.map((sub: any, index: number) => {
         const startFrame = Math.floor(sub.start * fps);
         const endFrame = Math.ceil(sub.end * fps);
-        // Kita beri sedikit tambahan durasi (buffer) agar transisi antar scene bisa saling tumpang tindih (crossfade)
         const durationInFrames = Math.max(endFrame - startFrame, 45); 
 
         return (
           <Sequence key={index} from={startFrame} durationInFrames={durationInFrames}>
-            <SmoothThematicScene text={sub.text} imageUrl={sub.image} />
+            <SlideThematicScene text={sub.text} imageUrl={sub.image} index={index} />
           </Sequence>
         );
       })}
@@ -35,39 +34,47 @@ export const MultiSceneVideo = () => {
   );
 };
 
-const SmoothThematicScene = ({ text, imageUrl }: { text: string; imageUrl: string }) => {
+const SlideThematicScene = ({ text, imageUrl, index }: { text: string; imageUrl: string; index: number }) => {
   const frame = useCurrentFrame();
   
-  // Animasi Opacity yang halus (Fade In di awal 15 frame, Fade Out di 15 frame terakhir)
-  const opacity = interpolate(
+  // Menentukan arah geser bergantian (genap geser dari kanan ke kiri, ganjil dari kiri ke kanan)
+  const isEven = index % 2 === 0;
+  
+  // Animasi posisi geser (Slide) yang mulus di awal adegan tanpa efek opacity/fade
+  const translateX = interpolate(
     frame, 
-    [0, 15, 75, 90], // Sesuaikan titik transisi
-    [0, 1, 1, 0], 
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+    [0, 25], 
+    [isEven ? 120 : -120, 0], // Bergeser masuk dari samping ke posisi tengah (0)
+    { extrapolateRight: "clamp" }
   );
 
-  // Efek Zoom Halus (Ken Burns Effect) dari skala 1.0 ke 1.12 sepanjang adegan
-  const scale = interpolate(frame, [0, 90], [1.0, 1.12], { extrapolateRight: "clamp" });
+  // Animasi pergeseran halus pada gambar (efek geser perlahan / pan & drift)
+  const imageTranslateX = interpolate(
+    frame,
+    [0, 90],
+    [isEven ? -30 : 30, isEven ? 30 : -30],
+    { extrapolateRight: "clamp" }
+  );
 
   const safeImageUrl = imageUrl || "https://images.pexels.com/photos/167699/pexels-photo-167699.jpeg?auto=compress&cs=tinysrgb&w=1080&h=1920&fit=crop";
 
   return (
-    <AbsoluteFill style={{ opacity }}>
-      {/* Background Gambar dengan Animasi Zoom & Fade yang Mulus */}
+    <AbsoluteFill style={{ overflow: "hidden" }}>
+      {/* Background Gambar dengan Efek Geser Perlahan (Pan & Drift) */}
       <Img 
         src={safeImageUrl} 
         style={{ 
-          width: "100%", 
-          height: "100%", 
+          width: "110%", 
+          height: "110%", 
           objectFit: "cover", 
-          transform: `scale(${scale})`, 
+          transform: `translateX(${imageTranslateX}px)`, 
           filter: "brightness(0.35)" 
         }} 
       />
 
-      {/* Subtitle Teks dengan Efek Muncul yang Lembut */}
+      {/* Teks Subtitle dengan Efek Geser Samping yang Sinematik */}
       <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", padding: "0 80px" }}>
-        <div style={{ textAlign: "center" }}>
+        <div style={{ transform: `translateX(${translateX}px)`, textAlign: "center" }}>
           <p style={{ 
             color: "#ffffff", 
             fontSize: "44px", 
