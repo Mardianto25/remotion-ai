@@ -20,7 +20,7 @@ jobs:
         run: npm install
 
       - name: Render Video
-        run: npx remotion render src/Root.tsx MyVideo out/video.mp4
+        run: npx remotion render src/index.ts MyVideo out/video.mp4
 
       - name: Upload Video Artifact
         uses: actions/upload-artifact@v4
