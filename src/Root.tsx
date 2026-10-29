@@ -1,35 +1,15 @@
-      <Background />
-      {SCENES.map((scene, i) => {
-        const seq = (
-          <Sequence
-            key={i}
-            from={from}
-            durationInFrames={scene.duration}
-            name={`Adegan ${i + 1}`}
-          >
-            <Scene config={scene} />
-          </Sequence>
-        );
-        from += scene.duration;
-        return seq;
-      })}
-    </AbsoluteFill>
-  );
-};
+import { Composition } from "remotion";
+import { MultiSceneVideo } from "./MultiSceneVideo";
 
-/* ============================================================
- * 7. ROOT: mendaftarkan komposisi ke Remotion
- * ============================================================ */
-
-export const RemotionRoot: React.FC = () => {
+export const Root = () => {
   return (
     <Composition
-      id="Renungan"
-      component={RenunganVideo}
-      durationInFrames={TOTAL_FRAMES}
-      fps={FPS}
-      width={WIDTH}
-      height={HEIGHT}
+      id="MultiSceneVideo"
+      component={MultiSceneVideo}
+      durationInFrames={450} // Total durasi 15 detik (30 fps x 15 detik)
+      fps={30}
+      width={1080}
+      height={1920} // Rasio vertikal 9:16 untuk Reels/TikTok/Shorts
     />
   );
 };
