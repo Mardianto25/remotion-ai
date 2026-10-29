@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Reels Video Generator</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #090d16; color: #fff; text-align: center; padding: 50px; }
+        .card { background: #1e293b; padding: 30px; border-radius: 12px; display: inline-block; box-shadow: 0 4px 20px rgba(0,0,0,0.5); width: 100%; max-width: 400px; }
+        input[type="file"] { margin: 20px 0; padding: 10px; background: #334155; border-radius: 6px; color: #fff; width: 100%; box-sizing: border-box; }
+        button { background: #38bdf8; color: #0f172a; border: none; padding: 12px 20px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 16px; }
+        button:hover { background: #0ea5e9; }
+        #status { margin-top: 20px; font-style: italic; color: #cbd5e1; }
+        video { margin-top: 20px; width: 100%; border-radius: 8px; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>🎬 AI Video Generator</h2>
+        <p>Upload file MP3 Anda, AI akan otomatis membuat transkrip, mencari gambar tematik, dan merender video!</p>
+        
+        <input type="file" id="audioFile" accept="audio/mp3">
+        <br>
+        <button onclick="uploadAudio()">Buat Video Otomatis</button>
+        
+        <div id="status"></div>
+        
+        <video id="resultVideo" controls></video>
+        <br>
+        <a id="downloadBtn" style="display:none;" download="video-reels.mp4"><button style="background: #22c55e; margin-top: 10px;">Download Video</button></a>
+    </div>
+
+    <script>
+        async function uploadAudio() {
+            const fileInput = document.getElementById("audioFile");
+            const statusDiv = document.getElementById("status");
+            const videoElement = document.getElementById("resultVideo");
+            const downloadBtn = document.getElementById("downloadBtn");
+
+            if (fileInput.files.length === 0) {
+                alert("Pilih file audio terlebih dahulu!");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("audio", fileInput.files[0]);
+
+            statusDiv.innerHTML = "⏳ Sedang meng-upload audio & memproses AI (Mohon tunggu)...";
+            videoElement.style.display = "none";
+            downloadBtn.style.display = "none";
+
+            try {
+                const response = await fetch("http://localhost:3000/api/generate", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    statusDiv.innerHTML = "✅ Video berhasil dibuat!";
+                    videoElement.src = data.videoUrl;
+                    videoElement.style.display = "block";
+                    downloadBtn.href = data.videoUrl;
+                    downloadBtn.style.display = "block";
+                } else {
+                    statusDiv.innerHTML = "❌ Terjadi kesalahan saat memproses video.";
+                }
+            } catch (error) {
+                statusDiv.innerHTML = "❌ Gagal terhubung ke server.";
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
