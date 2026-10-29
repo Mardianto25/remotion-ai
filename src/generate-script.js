@@ -6,7 +6,7 @@ import fetch from "node-fetch"; // Pastikan node-fetch terinstal atau gunakan na
 dotenv.config();
 
 const ai = new GoogleGenAI();
-const PIXABAY_API_KEY = process.env.PIXABAY_API_KEY || "MASUKKAN_API_KEY_PIXABAY_DISINI";
+const PIXABAY_API_KEY = process.env.PIXABAY_API_KEY || "43025440-ce5244c9d4ef4dfbc86ef45fe";
 
 async function getPixabayImage(keyword) {
   try {
@@ -43,7 +43,7 @@ async function generateVideoData() {
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-3.8-flash',
       contents: prompt,
     });
 
