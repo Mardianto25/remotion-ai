@@ -28,13 +28,45 @@ export const MultiSceneVideo = () => {
   );
 };
 
+// const DynamicScene = ({ title, text, keyword }: { title: string; text: string; keyword: string }) => {
+//   const frame = useCurrentFrame();
+//   const opacity = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: "clamp" });
+//   const scale = interpolate(frame, [0, 150], [1, 1.15], { extrapolateRight: "clamp" });
+
+//   // Menggunakan gambar dinamis dari Unsplash berdasarkan keyword dari Gemini AI
+//   const bgUrl = `https://source.unsplash.com/1080x1920/?${keyword}`;
+
+//   return (
+//     <AbsoluteFill>
+//       <Img 
+//         src={bgUrl} 
+//         style={{ width: "100%", height: "100%", objectFit: "cover", transform: `scale(${scale})`, filter: "brightness(0.4)" }} 
+//       />
+//       <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", padding: "0 60px" }}>
+//         <div style={{ opacity, textAlign: "center" }}>
+//           <h1 style={{ color: "#ffffff", fontSize: "56px", fontWeight: "bold", marginBottom: "20px", textShadow: "0 4px 10px rgba(0,0,0,0.8)" }}>
+//             {title}
+//           </h1>
+//           <p style={{ color: "#38bdf8", fontSize: "32px", lineHeight: "1.4", textShadow: "0 2px 8px rgba(0,0,0,0.8)" }}>
+//             "{text}"
+//           </p>
+//         </div>
+//       </AbsoluteFill>
+//     </AbsoluteFill>
+//   );
+// };
+
 const DynamicScene = ({ title, text, keyword }: { title: string; text: string; keyword: string }) => {
   const frame = useCurrentFrame();
   const opacity = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: "clamp" });
   const scale = interpolate(frame, [0, 150], [1, 1.15], { extrapolateRight: "clamp" });
 
-  // Menggunakan gambar dinamis dari Unsplash berdasarkan keyword dari Gemini AI
-  const bgUrl = `https://source.unsplash.com/1080x1920/?${keyword}`;
+  // Menggunakan URL gambar dinamis berbasis Pexels/Pixabay yang aman dari blokir
+  // AI akan mengisi bagian keyword sesuai hasil generate naskah
+  const bgUrl = `https://images.pexels.com/search/photos/?query=${encodeURIComponent(keyword)}`;
+
+  // ATAU menggunakan gambar stok dengan URL foto langsung yang estetik:
+  // const bgUrl = "https://images.pexels.com/photos/167699/pexels-photo-167699.jpeg?auto=compress&cs=tinysrgb&w=1080&h=1920&fit=crop";
 
   return (
     <AbsoluteFill>
