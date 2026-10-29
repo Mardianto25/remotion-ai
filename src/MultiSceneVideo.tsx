@@ -3,15 +3,22 @@ import {
   Sequence, 
   useCurrentFrame, 
   interpolate, 
-  Img 
+  Img, 
+  staticFile 
 } from "remotion";
 import { Audio } from "@remotion/media";
 import videoData from "./video-data.json";
 
 export const MultiSceneVideo = () => {
+  // Menangani audio default secara aman (pastikan ada file audio.mp3 di folder public, atau lewati jika kosong)
+  const defaultAudio = staticFile("audio.mp3");
+
   return (
     <AbsoluteFill style={{ backgroundColor: "#090d16" }}>
-      <Audio src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf756.mp3?filename=peaceful-guitar-112901.mp3" volume={0.5} />
+      {/* Audio dengan pengecekan aman */}
+      {defaultAudio ? (
+        <Audio src={defaultAudio} volume={0.5} />
+      ) : null}
 
       {videoData.map((scene: any, index: number) => {
         const fromFrame = index * 150; 
@@ -30,10 +37,13 @@ const DynamicScene = ({ title, text, imageUrl }: { title: string; text: string; 
   const opacity = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: "clamp" });
   const scale = interpolate(frame, [0, 150], [1, 1.15], { extrapolateRight: "clamp" });
 
+  // Fallback gambar default jika imageUrl kosong
+  const safeImageUrl = imageUrl || "https://images.pexels.com/photos/167699/pexels-photo-167699.jpeg?auto=compress&cs=tinysrgb&w=1080&h=1920&fit=crop";
+
   return (
     <AbsoluteFill>
       <Img 
-        src={imageUrl} 
+        src={safeImageUrl} 
         style={{ width: "100%", height: "100%", objectFit: "cover", transform: `scale(${scale})`, filter: "brightness(0.4)" }} 
       />
       <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", padding: "0 60px" }}>
