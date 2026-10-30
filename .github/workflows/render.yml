@@ -35,6 +35,11 @@ jobs:
           name: generated-video
           path: out/video.mp4
 
+      - name: Pindahkan Video ke Folder Public
+        run: |
+          mkdir -p public
+          cp out/video.mp4 public/output-video.mp4
+
       - name: Commit & Push Video ke Repository
         run: |
           git config --global user.name "GitHub Actions Bot"
