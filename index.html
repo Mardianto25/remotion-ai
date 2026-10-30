@@ -193,33 +193,40 @@
             const checkBtn = document.getElementById("checkBtn");
 
             checkBtn.disabled = true;
-            checkBtn.innerHTML = "Mengecek...";
+            checkBtn.innerHTML = "Mengecek ketersediaan video...";
 
             try {
-                const res = await fetch("/output-video.mp4?t=" + new Date().getTime(), { method: "HEAD" });
+                // Langsung pasang sumber video dengan penambahan parameter timestamp agar cache-nya tembus
+                const videoUrl = "/output-video.mp4?t=" + new Date().getTime();
                 
-                if (res.ok) {
-                    const contentLength = res.headers.get("content-length");
-                    
-                    if (contentLength && parseInt(contentLength) > 10000) {
-                        videoPreview.src = "/output-video.mp4?t=" + new Date().getTime();
-                        resultContainer.style.display = "block";
-                        statusDiv.className = "success";
-                        statusDiv.innerHTML = "✅ Video Selesai Dirender dan Siap Ditonton!";
-                        checkBtn.style.display = "none"; 
-                    } else {
-                        alert("⚠️ Video masih dalam proses render di cloud. Silakan coba beberapa saat lagi.");
-                    }
-                } else {
-                    alert("⚠️ Video belum tersedia. Proses render mungkin masih berjalan.");
-                }
+                // Cek apakah file bisa di-load dengan membuat elemen video uji coba
+                const testVideo = document.createElement("video");
+                testVideo.src = videoUrl;
+                
+                testVideo.onloadedmetadata = function() {
+                    // Jika metadata video berhasil dimuat dan durasinya valid, berarti video sudah ada dan siap!
+                    videoPreview.src = videoUrl;
+                    resultContainer.style.display = "block";
+                    statusDiv.className = "success";
+                    statusDiv.innerHTML = "✅ Video Selesai Dirender dan Siap Ditonton!";
+                    checkBtn.style.display = "none";
+                    checkBtn.disabled = false;
+                    checkBtn.innerHTML = "🔍 Cek Apakah Video Sudah Jadi";
+                };
+
+                testVideo.onerror = function() {
+                    alert("⚠️ Video masih diproses atau belum merespons. Silakan coba beberapa saat lagi.");
+                    checkBtn.disabled = false;
+                    checkBtn.innerHTML = "🔍 Cek Apakah Video Sudah Jadi";
+                };
+
             } catch (e) {
-                alert("⚠️ Video belum selesai dirender.");
-            } finally {
+                alert("⚠️ Gagal mengecek video.");
                 checkBtn.disabled = false;
                 checkBtn.innerHTML = "🔍 Cek Apakah Video Sudah Jadi";
             }
         }
+
 
         async function uploadToYouTube() {
             const youtubeBtn = document.getElementById("youtubeBtn");
