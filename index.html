@@ -64,6 +64,19 @@
         .loading { color: #facc15; background: rgba(250, 204, 21, 0.1); }
         .success { color: #4ade80; background: rgba(74, 222, 128, 0.1); }
         .error { color: #f87171; background: rgba(248, 113, 113, 0.1); }
+        .download-btn {
+            display: inline-block;
+            background: #22c55e;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 15px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .download-btn:hover { background: #16a34a; }
     </style>
 </head>
 <body>
@@ -73,23 +86,32 @@
         <p>Klik tombol di bawah untuk memicu sistem otomatis merender video reels di cloud!</p>
         
         <div class="file-upload-box">
-            <input type="file" id="audioFile">
+            <input type="file" id="audioFile" accept="audio/*">
         </div>
         
         <button id="submitBtn" onclick="triggerRender()">Mulai Render Video</button>
         
         <div id="status"></div>
+
+        <!-- Bagian Preview dan Download Video -->
+        <div id="resultContainer" style="display: none; margin-top: 20px; text-align: left;">
+            <h3 style="color: #4ade80; font-size: 16px; text-align: center;">🎉 Proses Berjalan di Cloud!</h3>
+            <p style="text-align: center; font-size: 13px;">Video Anda sedang dirender di GitHub Actions. Setelah selesai (~1-2 menit), Anda bisa mengunduhnya langsung dari repository.</p>
+            <a id="githubActionsLink" href="#" target="_blank" class="download-btn">📂 Buka GitHub Actions (Download Video)</a>
+        </div>
     </div>
 
     <script>
         async function triggerRender() {
             const statusDiv = document.getElementById("status");
             const submitBtn = document.getElementById("submitBtn");
+            const resultContainer = document.getElementById("resultContainer");
 
             submitBtn.disabled = true;
             submitBtn.innerHTML = "Memproses...";
             statusDiv.className = "loading";
             statusDiv.innerHTML = "⏳ Mengirim sinyal ke server cloud untuk memulai rendering...";
+            resultContainer.style.display = "none";
 
             try {
                 const response = await fetch("/api/generate", {
@@ -100,10 +122,14 @@
 
                 if (response.ok && data.success) {
                     statusDiv.className = "success";
-                    statusDiv.innerHTML = `✅ <b>Berhasil!</b> ${data.message}`;
+                    statusDiv.innerHTML = `✅ <b>Berhasil!</b> Sinyal terkirim ke GitHub Actions.`;
+                    
+                    // Arahkan tombol ke halaman Actions repository Anda
+                    document.getElementById("githubActionsLink").href = "https://github.com/Mardianto25/remotion-ai/actions";
+                    resultContainer.style.display = "block";
                 } else {
                     statusDiv.className = "error";
-                    statusDiv.innerHTML = `❌ <b>Gagal:</b> ${data.message || "Terjadi kesalahan pada server."}`;
+                    statusDiv.innerHTML = `❌ <b>Gagal:</b> ${data.message || "Terjadi kesalahan."}`;
                 }
             } catch (error) {
                 console.error(error);
