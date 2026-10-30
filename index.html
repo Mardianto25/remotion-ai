@@ -62,6 +62,14 @@
         }
         button:hover { background: #0ea5e9; }
         button:disabled { background: #475569; cursor: not-allowed; }
+        
+        .check-btn {
+            background: #facc15;
+            color: #0f172a;
+            margin-top: 10px;
+        }
+        .check-btn:hover { background: #eab308; }
+
         #status { 
             margin-top: 20px; 
             font-size: 14px; 
@@ -72,6 +80,7 @@
         .loading { color: #facc15; background: rgba(250, 204, 21, 0.1); }
         .success { color: #4ade80; background: rgba(74, 222, 128, 0.1); }
         .error { color: #f87171; background: rgba(248, 113, 113, 0.1); }
+        
         .download-btn {
             display: inline-block;
             background: #22c55e;
@@ -107,9 +116,12 @@
         
         <button id="submitBtn" onclick="triggerRender()">Mulai Render Video</button>
         
+        <!-- Tombol Cek Status Manual (Awalnya tersembunyi) -->
+        <button id="checkBtn" class="check-btn" onclick="checkVideoStatus()" style="display: none;">🔍 Cek Apakah Video Sudah Jadi</button>
+        
         <div id="status"></div>
 
-        <!-- Area Preview & Download (Hanya muncul jika video benar-benar sudah jadi) -->
+        <!-- Area Preview & Download -->
         <div id="resultContainer" style="display: none; margin-top: 20px;">
             <h3 style="color: #4ade80; font-size: 16px;">🎉 Video Berhasil Dibuat!</h3>
             <video id="videoPreview" controls></video>
@@ -122,6 +134,7 @@
             const audioInput = document.getElementById("audioFile");
             const statusDiv = document.getElementById("status");
             const submitBtn = document.getElementById("submitBtn");
+            const checkBtn = document.getElementById("checkBtn");
             const resultContainer = document.getElementById("resultContainer");
 
             if (audioInput.files.length === 0) {
@@ -137,6 +150,7 @@
             statusDiv.className = "loading";
             statusDiv.innerHTML = "⏳ Mengirim file audio dan memicu GitHub Actions...";
             resultContainer.style.display = "none";
+            checkBtn.style.display = "none";
 
             try {
                 const response = await fetch("/api/generate", {
@@ -148,9 +162,12 @@
 
                 if (response.ok && data.success) {
                     statusDiv.className = "success";
-                    statusDiv.innerHTML = `✅ <b>Render Sedang Berjalan!</b> Mohon tunggu sekitar 1-2 menit, tombol download akan muncul otomatis setelah selesai.`;
+                    statusDiv.innerHTML = `✅ <b>Render Sedang Berjalan!</b> Tunggu sekitar 1-2 menit, lalu klik tombol kuning di bawah untuk mengecek hasilnya.`;
                     
-                    checkVideoReady();
+                    // Tampilkan tombol cek manual
+                    checkBtn.style.display = "block";
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = "Mulai Render Baru";
                 } else {
                     statusDiv.className = "error";
                     statusDiv.innerHTML = `❌ <b>Gagal:</b> ${data.message || "Terjadi kesalahan."}`;
@@ -166,45 +183,41 @@
             }
         }
 
-        function checkVideoReady() {
+        async function checkVideoStatus() {
             const videoPreview = document.getElementById("videoPreview");
             const resultContainer = document.getElementById("resultContainer");
             const statusDiv = document.getElementById("status");
-            const submitBtn = document.getElementById("submitBtn");
+            const checkBtn = document.getElementById("checkBtn");
 
-            let startTime = new Date().getTime();
+            checkBtn.disabled = true;
+            checkBtn.innerHTML = "Mengecek...";
 
-            let interval = setInterval(async () => {
-                try {
-                    const res = await fetch("/output-video.mp4?t=" + new Date().getTime(), { method: "HEAD" });
+            try {
+                // Tambahkan timestamp acak agar tidak terkena cache browser
+                const res = await fetch("/output-video.mp4?t=" + new Date().getTime(), { method: "HEAD" });
+                
+                if (res.ok) {
+                    const contentLength = res.headers.get("content-length");
                     
-                    if (res.ok) {
-                        const contentLength = res.headers.get("content-length");
-                        
-                        // Validasi ukuran file harus valid (> 10KB) untuk memastikan file bukan sisa cache kosong
-                        if (contentLength && parseInt(contentLength) > 10000) {
-                            clearInterval(interval);
-                            
-                            videoPreview.src = "/output-video.mp4?t=" + new Date().getTime();
-                            resultContainer.style.display = "block";
-                            statusDiv.innerHTML = "✅ Video Selesai Dirender dan Siap Ditonton!";
-                            submitBtn.disabled = false;
-                            submitBtn.innerHTML = "Mulai Render Video";
-                        }
+                    // Validasi ukuran file minimal 10KB agar yakin bukan file kosong
+                    if (contentLength && parseInt(contentLength) > 10000) {
+                        videoPreview.src = "/output-video.mp4?t=" + new Date().getTime();
+                        resultContainer.style.display = "block";
+                        statusDiv.className = "success";
+                        statusDiv.innerHTML = "✅ Video Selesai Dirender dan Siap Ditonton!";
+                        checkBtn.style.display = "none"; // Sembunyikan tombol cek jika sudah ketemu
+                    } else {
+                        alert("⚠️ Video masih dalam proses render di cloud. Silakan coba beberapa saat lagi.");
                     }
-                } catch (e) {
-                    console.log("Menunggu video selesai dirender...");
+                } else {
+                    alert("⚠️ Video belum tersedia. Proses render mungkin masih berjalan.");
                 }
-
-                let elapsedTime = (new Date().getTime() - startTime) / 1000;
-                if (elapsedTime > 300) {
-                    clearInterval(interval);
-                    statusDiv.className = "error";
-                    statusDiv.innerHTML = "❌ Waktu render habis. Silakan cek tab Actions di GitHub.";
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = "Mulai Render Video";
-                }
-            }, 7000);
+            } catch (e) {
+                alert("⚠️ Video belum selesai dirender.");
+            } finally {
+                checkBtn.disabled = false;
+                checkBtn.innerHTML = "🔍 Cek Apakah Video Sudah Jadi";
+            }
         }
     </script>
 </body>
