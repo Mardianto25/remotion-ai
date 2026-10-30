@@ -27,7 +27,7 @@ jobs:
         run: node src/audio-to-text.js
 
       - name: Render Video dengan Remotion
-        run: npx remotion render index.tx MultiSceneVideo out/video.mp4
+        run: npx remotion render src/index.ts MultiSceneVideo out/video.mp4
 
       - name: Upload Hasil Video
         uses: actions/upload-artifact@v4
