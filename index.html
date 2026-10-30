@@ -28,6 +28,25 @@
         }
         h2 { margin-top: 0; color: #38bdf8; }
         p { color: #94a3b8; font-size: 14px; line-height: 1.5; }
+        .file-upload-box {
+            border: 2px dashed #475569;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            background: #0f172a;
+            text-align: left;
+        }
+        .file-upload-box label {
+            display: block;
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 8px;
+        }
+        input[type="file"] { 
+            color: #cbd5e1; 
+            width: 100%; 
+            font-size: 14px;
+        }
         button { 
             background: #38bdf8; 
             color: #0f172a; 
@@ -39,7 +58,7 @@
             width: 100%; 
             font-size: 16px; 
             transition: background 0.2s;
-            margin-top: 15px;
+            margin-top: 10px;
         }
         button:hover { background: #0ea5e9; }
         button:disabled { background: #475569; cursor: not-allowed; }
@@ -68,7 +87,7 @@
         .download-btn:hover { background: #16a34a; }
         video {
             width: 100%;
-            max-height: 400px;
+            max-height: 350px;
             border-radius: 8px;
             margin-top: 15px;
             background: #000;
@@ -79,7 +98,13 @@
 
     <div class="card">
         <h2>🎬 AI Reels Generator</h2>
-        <p>Klik tombol di bawah untuk mulai merender video secara otomatis di cloud.</p>
+        <p>Pilih file audio Anda, lalu klik tombol untuk merender video secara otomatis.</p>
+        
+        <!-- Kotak Upload Audio -->
+        <div class="file-upload-box">
+            <label for="audioFile">Pilih File Audio (MP3/WAV):</label>
+            <input type="file" id="audioFile" accept="audio/*">
+        </div>
         
         <button id="submitBtn" onclick="triggerRender()">Mulai Render Video</button>
         
@@ -95,19 +120,29 @@
 
     <script>
         async function triggerRender() {
+            const audioInput = document.getElementById("audioFile");
             const statusDiv = document.getElementById("status");
             const submitBtn = document.getElementById("submitBtn");
             const resultContainer = document.getElementById("resultContainer");
 
+            if (audioInput.files.length === 0) {
+                alert("Silakan pilih file audio terlebih dahulu!");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("audio", audioInput.files[0]);
+
             submitBtn.disabled = true;
-            submitBtn.innerHTML = "Memproses...";
+            submitBtn.innerHTML = "Mengupload & Memproses...";
             statusDiv.className = "loading";
-            statusDiv.innerHTML = "⏳ Mengirim sinyal ke GitHub Actions...";
+            statusDiv.innerHTML = "⏳ Mengirim file audio dan memicu GitHub Actions...";
             resultContainer.style.display = "none";
 
             try {
                 const response = await fetch("/api/generate", {
-                    method: "POST"
+                    method: "POST",
+                    body: formData
                 });
 
                 const data = await response.json();
@@ -116,7 +151,7 @@
                     statusDiv.className = "success";
                     statusDiv.innerHTML = `✅ <b>Render Berjalan!</b> Tunggu sekitar 1-2 menit, halaman ini akan memuat video otomatis.`;
                     
-                    // Polling / Cek berkala apakah file video sudah selesai ter-commit dan siap diputar
+                    // Cek berkala apakah video sudah selesai dirender dan di-commit
                     checkVideoReady();
                 } else {
                     statusDiv.className = "error";
@@ -133,7 +168,6 @@
             }
         }
 
-        // Fungsi otomatis mengecek apakah video sudah selesai dirender di server
         function checkVideoReady() {
             const videoPreview = document.getElementById("videoPreview");
             const resultContainer = document.getElementById("resultContainer");
@@ -145,17 +179,16 @@
                     const res = await fetch("/output-video.mp4", { method: "HEAD" });
                     if (res.ok) {
                         clearInterval(interval);
-                        // Refresh sumber video agar memuat file baru
                         videoPreview.src = "/output-video.mp4?t=" + new Date().getTime();
                         resultContainer.style.display = "block";
-                        statusDiv.innerHTML = "✅ Video Selesai Dirender!";
+                        statusDiv.innerHTML = "✅ Video Selesai Dirender dan Siap Ditonton!";
                         submitBtn.disabled = false;
                         submitBtn.innerHTML = "Mulai Render Video";
                     }
                 } catch (e) {
                     console.log("Menunggu video selesai...");
                 }
-            }, 5000); // Cek setiap 5 detik
+            }, 5000);
         }
     </script>
 </body>
