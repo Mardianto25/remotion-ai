@@ -98,9 +98,8 @@
 
     <div class="card">
         <h2>🎬 AI Reels Generator</h2>
-        <p>Pilih file audio Anda, lalu klik tombol untuk merender video secara otomatis.</p>
+        <p>Pilih file audio Anda, lalu klik tombol untuk merender video secara otomatis di cloud.</p>
         
-        <!-- Kotak Upload Audio -->
         <div class="file-upload-box">
             <label for="audioFile">Pilih File Audio (MP3/WAV):</label>
             <input type="file" id="audioFile" accept="audio/*">
@@ -110,7 +109,7 @@
         
         <div id="status"></div>
 
-        <!-- Area Preview & Download Langsung di FE -->
+        <!-- Area Preview & Download (Hanya muncul jika video benar-benar sudah jadi) -->
         <div id="resultContainer" style="display: none; margin-top: 20px;">
             <h3 style="color: #4ade80; font-size: 16px;">🎉 Video Berhasil Dibuat!</h3>
             <video id="videoPreview" controls></video>
@@ -149,9 +148,8 @@
 
                 if (response.ok && data.success) {
                     statusDiv.className = "success";
-                    statusDiv.innerHTML = `✅ <b>Render Berjalan!</b> Tunggu sekitar 1-2 menit, halaman ini akan memuat video otomatis.`;
+                    statusDiv.innerHTML = `✅ <b>Render Sedang Berjalan!</b> Mohon tunggu sekitar 1-2 menit, tombol download akan muncul otomatis setelah selesai.`;
                     
-                    // Cek berkala apakah video sudah selesai dirender dan di-commit
                     checkVideoReady();
                 } else {
                     statusDiv.className = "error";
@@ -174,21 +172,39 @@
             const statusDiv = document.getElementById("status");
             const submitBtn = document.getElementById("submitBtn");
 
+            let startTime = new Date().getTime();
+
             let interval = setInterval(async () => {
                 try {
-                    const res = await fetch("/output-video.mp4", { method: "HEAD" });
+                    const res = await fetch("/output-video.mp4?t=" + new Date().getTime(), { method: "HEAD" });
+                    
                     if (res.ok) {
-                        clearInterval(interval);
-                        videoPreview.src = "/output-video.mp4?t=" + new Date().getTime();
-                        resultContainer.style.display = "block";
-                        statusDiv.innerHTML = "✅ Video Selesai Dirender dan Siap Ditonton!";
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = "Mulai Render Video";
+                        const contentLength = res.headers.get("content-length");
+                        
+                        // Validasi ukuran file harus valid (> 10KB) untuk memastikan file bukan sisa cache kosong
+                        if (contentLength && parseInt(contentLength) > 10000) {
+                            clearInterval(interval);
+                            
+                            videoPreview.src = "/output-video.mp4?t=" + new Date().getTime();
+                            resultContainer.style.display = "block";
+                            statusDiv.innerHTML = "✅ Video Selesai Dirender dan Siap Ditonton!";
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = "Mulai Render Video";
+                        }
                     }
                 } catch (e) {
-                    console.log("Menunggu video selesai...");
+                    console.log("Menunggu video selesai dirender...");
                 }
-            }, 5000);
+
+                let elapsedTime = (new Date().getTime() - startTime) / 1000;
+                if (elapsedTime > 300) {
+                    clearInterval(interval);
+                    statusDiv.className = "error";
+                    statusDiv.innerHTML = "❌ Waktu render habis. Silakan cek tab Actions di GitHub.";
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = "Mulai Render Video";
+                }
+            }, 7000);
         }
     </script>
 </body>
