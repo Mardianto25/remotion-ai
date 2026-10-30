@@ -3,20 +3,17 @@ import fetch from "node-fetch";
 import formidable from "formidable";
 import fs from "fs";
 
-// Konfigurasi API Client Gemini terbaru
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const PIXABAY_API_KEY = process.env.PIXABAY_API_KEY;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPO = process.env.GITHUB_REPO; // Format: "username-anda/nama-repo"
 
-// Matikan body parser bawaan Vercel agar formidable bisa membaca file binary multipart/form-data
 export const config = {
   api: {
     bodyParser: false,
   },
 };
 
-// Fungsi helper untuk mengambil gambar dari Pixabay berdasarkan keyword
 async function getPixabayImage(keyword) {
   try {
     const url = `https://pixabay.com/api/?key=${PIXABAY_API_KEY}&q=${encodeURIComponent(keyword)}&image_type=photo&orientation=vertical&safesearch=true&per_page=3`;
@@ -38,7 +35,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, message: 'Method not allowed' });
   }
 
-  // Parsing file yang di-upload menggunakan formidable
   const form = new formidable.IncomingForm();
   
   form.parse(req, async (err, fields, files) => {
@@ -56,9 +52,8 @@ export default async function handler(req, res) {
       const audioBuffer = fs.readFileSync(audioFile.filepath);
       const audioBase64 = audioBuffer.toString("base64");
 
-      // 1. Proses Transkripsi & Keyword dengan Gemini 1.5 Flash
       const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
+        model: 'gemini-1.5-flash',
         contents: [
           {
             inlineData: {
@@ -89,7 +84,6 @@ export default async function handler(req, res) {
         });
       }
 
-      // 2. Trigger GitHub Actions untuk mulai render video di Cloud
       console.log("🚀 Memicu GitHub Actions untuk rendering video...");
       const ghResponse = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/render.yml/dispatches`, {
         method: "POST",

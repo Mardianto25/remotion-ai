@@ -70,10 +70,11 @@
 
     <div class="card">
         <h2>🎬 AI Reels Generator</h2>
-        <p>Upload file audio (MP3) Anda. AI akan otomatis membuat transkrip teks, mencarikan gambar tematik dari Pixabay, dan merender videonya di *cloud*!</p>
+        <p>Pilih file audio Anda (bebas format mp3/wav/m4a), AI akan otomatis membuat transkrip teks dan merender videonya!</p>
         
         <div class="file-upload-box">
-            <input type="file" id="audioFile" accept="audio/mp3,audio/wav">
+            <!-- Tanpa atribut accept agar bebas pilih file audio dari HP -->
+            <input type="file" id="audioFile">
         </div>
         
         <button id="submitBtn" onclick="uploadAudio()">Buat Video Otomatis</button>
@@ -95,14 +96,12 @@
             const formData = new FormData();
             formData.append("audio", fileInput.files[0]);
 
-            // Ubah UI menjadi status loading
             submitBtn.disabled = true;
             submitBtn.innerHTML = "Memproses...";
             statusDiv.className = "loading";
             statusDiv.innerHTML = "⏳ Sedang meng-upload audio & menganalisis AI (Gemini & Pixabay). Mohon tunggu sebentar...";
 
             try {
-                // Mengirim file ke backend Serverless Vercel (/api/generate)
                 const response = await fetch("/api/generate", {
                     method: "POST",
                     body: formData
