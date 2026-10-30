@@ -1,42 +1,17 @@
-
 import fs from "fs";
-import path from "path";
 import { GoogleGenAI } from "@google/genai";
+import fetch from "node-fetch";
 
-// Inisialisasi Gemini API
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-// Konfigurasi OAuth2 Client menggunakan kredensial dari Environment Variables
-const oauth2Client = new google.auth.OAuth2(
-  process.env.YOUTUBE_CLIENT_ID,
-  process.env.YOUTUBE_CLIENT_SECRET,
-  "https://developers.google.com/oauthplayground"
-);
-
-oauth2Client.setCredentials({
-  refresh_token: process.env.YOUTUBE_REFRESH_TOKEN,
-});
-
-const youtube = google.youtube({
-  version: "v3",
-  auth: oauth2Client,
-});
-
-/**
- * Fungsi untuk menghasilkan Judul & Deskripsi otomatis berdasarkan transkrip renungan Islami
- */
 async function generateMetadata() {
   try {
     let transcript = "Renungan harian penyejuk hati dan pengingat diri.";
-    
-    // Cek lokasi file transkrip
     if (fs.existsSync("public/transcript.txt")) {
       transcript = fs.readFileSync("public/transcript.txt", "utf-8");
     } else if (fs.existsSync("transcript.txt")) {
       transcript = fs.readFileSync("transcript.txt", "utf-8");
     }
-
-    console.log("📄 Memproses transkrip untuk metadata...");
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
@@ -46,7 +21,7 @@ async function generateMetadata() {
     const rawText = response.text.trim();
     const cleanJson = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
     const parsed = JSON.parse(cleanJson);
-    
+
     return {
       title: parsed.title || "Renungan Harian Islami #Shorts",
       description: parsed.description || "Semoga bermanfaat dan menjadi pengingat kebaikan.\n\n#renungan #islamic #shorts"
@@ -60,56 +35,83 @@ async function generateMetadata() {
   }
 }
 
-async function uploadVideo() {
-  try {
-    const videoPath = path.join(process.cwd(), "public", "output.mp4");
-    
-    if (!fs.existsSync(videoPath)) {
-      throw new Error("File video output.mp4 tidak ditemukan di direktori public!");
-    }
+// Fungsi untuk mendapatkan Access Token baru menggunakan Refresh Token
+async function getAccessToken() {
+  const response = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: process.env.YOUTUBE_CLIENT_ID,
+      client_secret: process.env.YOUTUBE_CLIENT_SECRET,
+      refresh_token: process.env.YOUTUBE_REFRESH_TOKEN,
+      grant_type: "refresh_token"
+    })
+  });
 
-    console.log("🤖 Menyiapkan metadata dengan AI...");
-    const metadata = await generateMetadata();
-
-    console.log("🔑 Mendapatkan Access Token YouTube...");
-    const { token } = await oauth2Client.getAccessToken();
-    if (!token) {
-      throw new Error("Gagal memperbarui Access Token YouTube.");
-    }
-
-    // Jadwalkan tayang besok atau atur sesuai kebutuhan
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const videoMetadata = {
-      snippet: {
-        title: metadata.title,
-        description: metadata.description,
-        tags: ["renungan", "islamic", "shorts", "nasihat", "inspirasi"],
-        categoryId: "22" // Kategori People & Blogs
-      },
-      status: {
-        privacyStatus: "private", // Atur private untuk video terjadwal
-        publishAt: tomorrow.toISOString(),
-        selfDeclaredMadeForKids: false
-      }
-    };
-
-    console.log(`🚀 Mengunggah video: "${metadata.title}"...`);
-
-    const res = await youtube.videos.insert({
-      part: "snippet,status",
-      requestBody: videoMetadata,
-      media: {
-        body: fs.createReadStream(videoPath),
-      },
-    });
-
-    console.log("✅ Berhasil mengunggah video! ID Video:", res.data.id);
-  } catch (error) {
-    console.error("❌ Error saat mengunggah video ke YouTube:", error);
-    process.exit(1);
-  }
+  const data = await response.json();
+  if (!response.ok) throw new Error("Gagal memperbarui Access Token YouTube: " + JSON.stringify(data));
+  return data.access_token;
 }
 
-uploadVideo();
+async function uploadVideo() {
+  // Sesuaikan path video jika foldernya public/output.mp4 atau output.mp4
+  const videoPath = fs.existsSync("public/output.mp4") ? "public/output.mp4" : "public/output-video.mp4";
+  if (!fs.existsSync(videoPath)) throw new Error("File video tidak ditemukan di direktori public!");
+
+  console.log("🤖 Membuat metadata dengan AI berdasarkan transkrip...");
+  const metadata = await generateMetadata();
+  
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(10, 0, 0, 0);
+
+  const videoMetadata = {
+    snippet: {
+      title: metadata.title,
+      description: metadata.description,
+      tags: ["renungan", "islamic", "shorts", "nasihat", "inspirasi"],
+      categoryId: "22" // People & Blogs
+    },
+    status: {
+      privacyStatus: "private",
+      publishAt: tomorrow.toISOString(),
+      selfDeclaredMadeForKids: false
+    }
+  };
+
+  console.log("🔑 Mendapatkan Access Token YouTube...");
+  const accessToken = await getAccessToken();
+
+  console.log("🚀 Mengupload video ke YouTube...");
+  const uploadResponse = await fetch(
+    "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=multipart&part=snippet,status",
+    {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "multipart/related; boundary=\"foo_bar_baz\""
+      },
+      body: Buffer.concat([
+        Buffer.from(
+          `--foo_bar_baz\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n` +
+          JSON.stringify(videoMetadata) +
+          `\r\n--foo_bar_baz\r\nContent-Type: video/mp4\r\n\r\n`
+        ),
+        fs.readFileSync(videoPath),
+        Buffer.from(`\r\n--foo_bar_baz--`)
+      ])
+    }
+  );
+
+  const result = await uploadResponse.json();
+  if (!uploadResponse.ok) {
+    throw new Error("Gagal mengupload ke YouTube: " + JSON.stringify(result));
+  }
+
+  console.log("✅ Berhasil! Video YouTube terjadwal dengan ID:", result.id);
+}
+
+uploadVideo().catch(err => {
+  console.error("❌ Error:", err);
+  process.exit(1);
+});

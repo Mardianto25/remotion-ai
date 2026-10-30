@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import fs from "fs";
 import dotenv from "dotenv";
-import fetch from "node-fetch"; // Pastikan node-fetch terinstal atau gunakan native fetch
+import fetch from "node-fetch";
 
 dotenv.config();
 
@@ -15,13 +15,11 @@ async function getPixabayImage(keyword) {
     const data = await res.json();
     
     if (data.hits && data.hits.length > 0) {
-      // Mengambil URL gambar resolusi tinggi (largeImageURL atau webformatURL)
       return data.hits[0].largeImageURL;
     }
   } catch (e) {
     console.error("Gagal mengambil gambar dari Pixabay:", e);
   }
-  // Fallback gambar default jika gagal
   return "https://images.pexels.com/photos/167699/pexels-photo-167699.jpeg?auto=compress&cs=tinysrgb&w=1080&h=1920&fit=crop";
 }
 
@@ -43,7 +41,7 @@ async function generateVideoData() {
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
+      model: 'gemini-2.5-flash', // Menggunakan model yang stabil
       contents: prompt,
     });
 
@@ -64,9 +62,18 @@ async function generateVideoData() {
       });
     }
     
-    // Simpan ke video-data.json yang langsung berisi URL gambar matang dari Pixabay
+    // Simpan ke video-data.json
     fs.writeFileSync("./src/video-data.json", JSON.stringify(finalScenes, null, 2));
     console.log("✅ [3/4] Sukses! File './src/video-data.json' siap digunakan.");
+
+    // 📄 BUAT FILE TRANSKRIP OTOMATIS UNTUK YOUTUBE UPLOAD
+    if (!fs.existsSync("public")) {
+      fs.mkdirSync("public", { recursive: true });
+    }
+    const fullTranscript = finalScenes.map(scene => scene.text).join(" ");
+    fs.writeFileSync("public/transcript.txt", fullTranscript, "utf-8");
+    console.log("📄 [4/4] Sukses! File 'public/transcript.txt' berhasil dibuat.");
+
   } catch (error) {
     console.error("❌ Terjadi kesalahan:", error);
   }
