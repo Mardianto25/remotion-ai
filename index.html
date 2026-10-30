@@ -193,39 +193,28 @@
             const checkBtn = document.getElementById("checkBtn");
 
             checkBtn.disabled = true;
-            checkBtn.innerHTML = "Mengecek ketersediaan video...";
+            checkBtn.innerHTML = "Memuat Video...";
 
             try {
-                // Langsung pasang sumber video dengan penambahan parameter timestamp agar cache-nya tembus
+                // Langsung pasang sumber video ke elemen preview dengan pemecah cache (?t=...)
                 const videoUrl = "/output-video.mp4?t=" + new Date().getTime();
                 
-                // Cek apakah file bisa di-load dengan membuat elemen video uji coba
-                const testVideo = document.createElement("video");
-                testVideo.src = videoUrl;
+                videoPreview.src = videoUrl;
+                resultContainer.style.display = "block";
                 
-                testVideo.onloadedmetadata = function() {
-                    // Jika metadata video berhasil dimuat dan durasinya valid, berarti video sudah ada dan siap!
-                    videoPreview.src = videoUrl;
-                    resultContainer.style.display = "block";
-                    statusDiv.className = "success";
-                    statusDiv.innerHTML = "✅ Video Selesai Dirender dan Siap Ditonton!";
-                    checkBtn.style.display = "none";
-                    checkBtn.disabled = false;
-                    checkBtn.innerHTML = "🔍 Cek Apakah Video Sudah Jadi";
-                };
-
-                testVideo.onerror = function() {
-                    alert("⚠️ Video masih diproses atau belum merespons. Silakan coba beberapa saat lagi.");
-                    checkBtn.disabled = false;
-                    checkBtn.innerHTML = "🔍 Cek Apakah Video Sudah Jadi";
-                };
+                statusDiv.className = "success";
+                statusDiv.innerHTML = "✅ Video Selesai Dirender dan Siap Ditonton!";
+                
+                // Sembunyikan tombol cek karena video sudah ditampilkan
+                checkBtn.style.display = "none"; 
 
             } catch (e) {
-                alert("⚠️ Gagal mengecek video.");
+                alert("⚠️ Gagal memuat video. Silakan coba sebentar lagi.");
                 checkBtn.disabled = false;
                 checkBtn.innerHTML = "🔍 Cek Apakah Video Sudah Jadi";
             }
         }
+
 
 
         async function uploadToYouTube() {
