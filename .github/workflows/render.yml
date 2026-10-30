@@ -24,7 +24,7 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
-        run: node audio-to-text.js
+        run: node src/audio-to-text.js
 
       - name: Render Video dengan Remotion
         run: npx remotion render src/Root.jsx ReelVideo out/video.mp4
