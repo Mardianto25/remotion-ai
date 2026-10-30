@@ -70,41 +70,30 @@
 
     <div class="card">
         <h2>🎬 AI Reels Generator</h2>
-        <p>Pilih file audio Anda (bebas format mp3/wav/m4a), AI akan otomatis membuat transkrip teks dan merender videonya!</p>
+        <p>Klik tombol di bawah untuk memicu sistem otomatis merender video reels di cloud!</p>
         
         <div class="file-upload-box">
-            <!-- Tanpa atribut accept agar bebas pilih file audio dari HP -->
             <input type="file" id="audioFile">
         </div>
         
-        <button id="submitBtn" onclick="uploadAudio()">Buat Video Otomatis</button>
+        <button id="submitBtn" onclick="triggerRender()">Mulai Render Video</button>
         
         <div id="status"></div>
     </div>
 
     <script>
-        async function uploadAudio() {
-            const fileInput = document.getElementById("audioFile");
+        async function triggerRender() {
             const statusDiv = document.getElementById("status");
             const submitBtn = document.getElementById("submitBtn");
-
-            if (fileInput.files.length === 0) {
-                alert("Silakan pilih file audio terlebih dahulu!");
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append("audio", fileInput.files[0]);
 
             submitBtn.disabled = true;
             submitBtn.innerHTML = "Memproses...";
             statusDiv.className = "loading";
-            statusDiv.innerHTML = "⏳ Sedang meng-upload audio & menganalisis AI (Gemini & Pixabay). Mohon tunggu sebentar...";
+            statusDiv.innerHTML = "⏳ Mengirim sinyal ke server cloud untuk memulai rendering...";
 
             try {
                 const response = await fetch("/api/generate", {
-                    method: "POST",
-                    body: formData
+                    method: "POST"
                 });
 
                 const data = await response.json();
@@ -122,7 +111,7 @@
                 statusDiv.innerHTML = "❌ Gagal terhubung ke server Vercel.";
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = "Buat Video Otomatis";
+                submitBtn.innerHTML = "Mulai Render Video";
             }
         }
     </script>
