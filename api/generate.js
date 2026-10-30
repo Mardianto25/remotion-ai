@@ -12,12 +12,35 @@ export default async function handler(req, res) {
     if (!githubToken || !githubRepo) {
       return res.status(500).json({ 
         success: false, 
-        message: 'Konfigurasi GITHUB_TOKEN atau GITHUB_REPO belum lengkap di Vercel.' 
+        message: 'Konfigurasi GITHUB_TOKEN atau GITHUB_REPO belum lengkap.' 
       });
     }
 
-    console.log(`🚀 Memicu GitHub Actions untuk repository: ${githubRepo}...`);
+    console.log("🧹 Menghapus file video lama agar tidak terjadi cache...");
+    
+    // 1. Ambil SHA file lama jika ada, lalu hapus agar web tidak membaca video lama
+    const getFileRes = await fetch(`https://api.github.com/repos/${githubRepo}/contents/public/output-video.mp4`, {
+      headers: { "Authorization": `Bearer ${githubToken}`, "Accept": "application/vnd.github.v3+json" }
+    });
+    
+    if (getFileRes.ok) {
+      const fileData = await getFileRes.json();
+      await fetch(`https://api.github.com/repos/${githubRepo}/contents/public/output-video.mp4`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${githubToken}`,
+          "Accept": "application/vnd.github.v3+json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          message: "Hapus video lama sebelum render baru",
+          sha: fileData.sha,
+          branch: "main"
+        })
+      });
+    }
 
+    console.log("🚀 Memicu GitHub Actions...");
     const ghResponse = await fetch(`https://api.github.com/repos/${githubRepo}/actions/workflows/render.yml/dispatches`, {
       method: "POST",
       headers: {
@@ -35,7 +58,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ 
       success: true, 
-      message: "Berhasil! Proses render video sedang berjalan otomatis di cloud GitHub Actions." 
+      message: "Render dimulai! Video lama dibersihkan." 
     });
 
   } catch (error) {
