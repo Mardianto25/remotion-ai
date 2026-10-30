@@ -114,28 +114,21 @@
         <h2>🎬 AI Reels Generator</h2>
         <p>Pilih file audio Anda, lalu klik tombol untuk merender video secara otomatis di cloud.</p>
         
-        <!-- Kotak Upload Audio -->
         <div class="file-upload-box">
             <label for="audioFile">Pilih File Audio (MP3/WAV):</label>
             <input type="file" id="audioFile" accept="audio/*">
         </div>
         
-        <!-- Tombol Eksekusi Render -->
         <button id="submitBtn" onclick="triggerRender()">Mulai Render Video</button>
-        
-        <!-- Tombol Cek Status Manual -->
         <button id="checkBtn" class="check-btn" onclick="checkVideoStatus()" style="display: none;">🔍 Cek Apakah Video Sudah Jadi</button>
         
         <div id="status"></div>
 
-        <!-- Area Preview, Download & Upload YouTube -->
         <div id="resultContainer" style="display: none; margin-top: 20px;">
             <h3 style="color: #4ade80; font-size: 16px;">🎉 Video Berhasil Dibuat!</h3>
             <video id="videoPreview" controls></video>
             
             <a id="downloadBtn" href="/output-video.mp4" download="reels-ai.mp4" class="download-btn">⬇️ Download Video</a>
-            
-            <!-- Tombol Jadwalkan & Upload ke YouTube -->
             <button id="youtubeBtn" class="youtube-btn" onclick="uploadToYouTube()">📤 Jadwalkan & Upload ke YouTube (Besok)</button>
         </div>
     </div>
@@ -173,7 +166,7 @@
 
                 if (response.ok && data.success) {
                     statusDiv.className = "success";
-                    statusDiv.innerHTML = `✅ <b>Render Sedang Berjalan!</b> Tunggu sekitar 1-2 menit, lalu klik tombol kuning di bawah untuk mengecek hasilnya.`;
+                    statusDiv.innerHTML = `✅ <b>Render Sedang Berjalan!</b> Tunggu 1-2 menit, lalu klik tombol kuning di bawah untuk mengecek hasilnya.`;
                     
                     checkBtn.style.display = "block";
                     submitBtn.disabled = false;
